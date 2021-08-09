@@ -1,0 +1,65 @@
+#+title: Todo list and overview structure of the wikispider project
+#+author: Richard Neilsen
+#+STARTUP: indent
+
+* Structure overview
+** Spider
+   A spider that reads un-crawled links from a *to-crawl* db and downloads the
+   raw html files, writing them to a *dump* sqlite database
+   Extensions:
+   - If all pages are crawled, finds those that were processed least recently
+** Cleanup
+   A cleanup program that takes raw html blobs from the *dump* database, and
+   1. Extracts the usable links
+      - needs to identify only the links in the article body, not the sidebar,
+        nav box, links to talk pages, etc
+      - those links should be written back into the *to-crawl* db for the Spider
+      -- TODO does sqlite handle multiple processes acting on the same database
+         simultaneously, gracefully?
+   2. Extracts the article body, compresses it, and stores it in an *index* database
+   3. Removes the raw html from the *dump* database but keeps that link 
+      marked as visited (the entire compressed wikipedia corpus is about 20GB but
+      uncompressed it's probably huge)
+** Index
+   A program that takes the compressed articles in the *index* database, and creates 
+   a table of words, and a table of where words were used (many-to-many relation)
+   - each word could include its position in the article, for showing 
+     context snippets later during search
+** Pagerank
+   A program that processes the link structure and assigns pages in the *index* A
+   pagerank
+** Search
+   A program that is given a word and returns a list of pageranked pages containing
+   that word
+*** Extensions
+    - search on multiple words
+    - return context snippets
+    - search on phrases
+
+* Database overview
+** dump.sqlite*** Pages (table)
+   - PK (int)
+   - url
+   - raw-html
+   - crawled (date or NULL)
+** to-crawl.sqlite
+*** URLs (table)
+    - url (PK)
+    - processed (date)
+** index.sqlite
+*** Pages (table)
+    - PK (int)
+    - url
+    - compressed article body
+    - crawled (date or NULL)
+*** Links (table)
+    - from (FK)
+    - to (FK)
+*** Words (table)
+    - PK (int)
+    - word
+*** Mentions (table)
+    - word (FK int)
+    - page (FK int)
+    - position (int)
+  TODO continue
