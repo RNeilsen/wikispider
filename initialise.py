@@ -2,40 +2,50 @@
 
 import os, sqlite3
 
-dbs = { 'dump.sqlite': '''
+dbs = { 'wsdump.sqlite': '''
+            DROP TABLE IF EXISTS Pages;
             CREATE TABLE Pages
             (   url         TEXT NOT NULL PRIMARY KEY UNIQUE,
                 raw_html    TEXT,
-                crawled     INTEGER )''',
+                crawled     INTEGER );
+            VACUUM''',
         
-        'to_crawl.sqlite': '''
+        'wscrawl.sqlite': '''
+            DROP TABLE IF EXISTS Urls;
             CREATE TABLE Urls
             (   url         TEXT NOT NULL PRIMARY KEY UNIQUE,
-                processed   INTEGER NOT NULL )''',
+                processed   INTEGER NOT NULL );
+            INSERT INTO Urls (url, processed) VALUES 
+            (   'https://en.wikipedia.org/wiki/Mathematics', 0);
+            VACUUM''',
         
-        'index.sqlite': '''
+        'wsindex.sqlite': '''
+            DROP TABLE IF EXISTS Pages;
             CREATE TABLE Pages
             (   url         TEXT NOT NULL PRIMARY KEY UNIQUE,
                 comp_text   TEXT,
                 crawled     INTEGER );
+            DROP TABLE IF EXISTS Links;
             CREATE TABLE Links
             (   from_url    TEXT,
                 to_url      TEXT,
                 UNIQUE (from_url, to_url) );
+            DROP TABLE IF EXISTS Words;
             CREATE TABLE Words
             (   id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                 word        TEXT );
+            DROP TABLE IF EXISTS Mentions;
             CREATE TABLE Mentions
             (   word_id     INTEGER NOT NULL,
                 url         TEXT NOT NULL,
-                position    INTEGER NOT NULL )'''}
+                position    INTEGER NOT NULL );
+            VACUUM'''}
 
 for f in dbs.keys():
     if os.path.isfile(f):
-        resp = input('Delete ' + f + '? (y/N) ')
+        resp = input('Wipe ' + f + '? (y/N) ')
         if resp.lower() != 'y':
             continue
-        os.remove(f)
     else:
         print(f, 'not found, initialising')
 
