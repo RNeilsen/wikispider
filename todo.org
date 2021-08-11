@@ -4,20 +4,17 @@
 
 * Structure overview
 ** Spider
-   A spider that reads un-crawled links from a *to-crawl* db and downloads the
-   raw html files, writing them to a *dump* sqlite database
-   Extensions:
-   - If all pages are crawled, finds those that were processed least recently
+   A spider that checks the *wsdump* db for pages that have the longest time since
+   last crawled, them downloads them and writes their raw html them to the db
 ** Cleanup
-   A cleanup program that takes raw html blobs from the *dump* database, and
+   A cleanup program that takes raw html blobs from the *wsdump* database, and
    1. Extracts the usable links
       - needs to identify only the links in the article body, not the sidebar,
         nav box, links to talk pages, etc
-      - those links should be written back into the *to-crawl* db for the Spider
-      -- TODO does sqlite handle multiple processes acting on the same database
-         simultaneously, gracefully?
+      - those links should be written back into the *wsdump* db with NULL crawled
+        date
    2. Extracts the article body, compresses it, and stores it in an *index* database
-   3. Removes the raw html from the *dump* database but keeps that link 
+   3. Removes the raw html from the *wsdump* database but keeps that link 
       marked as visited (the entire compressed wikipedia corpus is about 20GB but
       uncompressed it's probably huge)
 ** Index
@@ -39,16 +36,13 @@
    A program that wipes databases and resets them (mainly for testing purposes)
 
 * Database overview
-** dump.sqlite
+** wsdump.sqlite
 *** Pages (table)
     - url (PK)
-    - raw-html
+    - raw_html
     - crawled (NULL or date in unixepoch integer format)
-** to_crawl.sqlite
-*** URLs (table)
-    - url (PK)
-    - processed (date in unixepoch integer format)
-** index.sqlite
+    - cleaned (NULL or date in unixepoch integer format)
+** wsindex.sqlite
 *** Pages (table)
     - url (PK)
     - compressed article body

@@ -7,16 +7,20 @@ dbs = { 'wsdump.sqlite': '''
             CREATE TABLE Pages
             (   url         TEXT NOT NULL PRIMARY KEY UNIQUE,
                 raw_html    TEXT,
-                crawled     INTEGER );
-            VACUUM''',
-        
-        'wscrawl.sqlite': '''
-            DROP TABLE IF EXISTS Urls;
-            CREATE TABLE Urls
-            (   url         TEXT NOT NULL PRIMARY KEY UNIQUE,
-                processed   INTEGER NOT NULL );
-            INSERT INTO Urls (url, processed) VALUES 
-            (   'https://en.wikipedia.org/wiki/Mathematics', 0);
+                crawled     INTEGER,
+                cleaned     INTEGER );
+            INSERT INTO Pages (url) VALUES 
+            (   'https://en.wikipedia.org/wiki/Mathematics' );
+            INSERT INTO Pages (url) VALUES 
+            (   'https://en.wikipedia.org/wiki/Mathematicians' );
+            INSERT INTO Pages (url) VALUES 
+            (   'https://en.wikipedia.org/wiki/Applied_mathematics' );
+            INSERT INTO Pages (url) VALUES 
+            (   'https://en.wikipedia.org/wiki/Statistics' );
+            INSERT INTO Pages (url) VALUES 
+            (   'https://en.wikipedia.org/wiki/David_Hilbert' );
+            INSERT INTO Pages (url) VALUES 
+            (   'https://en.wikipedia.org/wiki/Richard_Feynman' );
             VACUUM''',
         
         'wsindex.sqlite': '''
