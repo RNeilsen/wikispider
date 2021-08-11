@@ -1,4 +1,5 @@
-'''Completely wipes and resets the databases'''
+'''Completely wipes and resets the databases, and inserts a few pages
+to be crawled as a starting seed'''
 
 import os, sqlite3
 
@@ -10,17 +11,12 @@ dbs = { 'wsdump.sqlite': '''
                 crawled     INTEGER,
                 cleaned     INTEGER );
             INSERT INTO Pages (url) VALUES 
-            (   'https://en.wikipedia.org/wiki/Mathematics' );
-            INSERT INTO Pages (url) VALUES 
-            (   'https://en.wikipedia.org/wiki/Mathematicians' );
-            INSERT INTO Pages (url) VALUES 
-            (   'https://en.wikipedia.org/wiki/Applied_mathematics' );
-            INSERT INTO Pages (url) VALUES 
-            (   'https://en.wikipedia.org/wiki/Statistics' );
-            INSERT INTO Pages (url) VALUES 
-            (   'https://en.wikipedia.org/wiki/David_Hilbert' );
-            INSERT INTO Pages (url) VALUES 
-            (   'https://en.wikipedia.org/wiki/Richard_Feynman' );
+                ( 'https://en.wikipedia.org/wiki/Mathematics' ),
+				( 'https://en.wikipedia.org/wiki/Mathematicians' ),
+				( 'https://en.wikipedia.org/wiki/Applied_mathematics' ),
+				( 'https://en.wikipedia.org/wiki/Statistics' ),
+				( 'https://en.wikipedia.org/wiki/David_Hilbert' ),
+				( 'https://en.wikipedia.org/wiki/Richard_Feynman' );
             VACUUM''',
         
         'wsindex.sqlite': '''
