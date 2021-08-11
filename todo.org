@@ -35,23 +35,24 @@
     - search on multiple words
     - return context snippets
     - search on phrases
+** Initialise
+   A program that wipes databases and resets them (mainly for testing purposes)
 
 * Database overview
-** dump.sqlite*** Pages (table)
-   - PK (int)
-   - url
-   - raw-html
-   - crawled (date or NULL)
-** to-crawl.sqlite
+** dump.sqlite
+*** Pages (table)
+    - url (PK)
+    - raw-html
+    - crawled (NULL or date in unixepoch integer format)
+** to_crawl.sqlite
 *** URLs (table)
     - url (PK)
-    - processed (date)
+    - processed (date in unixepoch integer format)
 ** index.sqlite
 *** Pages (table)
-    - PK (int)
-    - url
+    - url (PK)
     - compressed article body
-    - crawled (date or NULL)
+    - crawled (NULL or date in unixepoch integer format)
 *** Links (table)
     - from (FK)
     - to (FK)
