@@ -38,14 +38,14 @@
 * Database overview
 ** wsdump.sqlite
 *** Pages (table)
-    - url (PK)
-    - raw_html
+    - pagename (PK)
+    - raw_html    TODO replace with wikitext?
     - crawled (NULL or date in unixepoch integer format)
     - cleaned (NULL or date in unixepoch integer format)
 ** wsindex.sqlite
 *** Pages (table)
     - id (PK int)
-    - url
+    - pagename
     - compressed article body
     - crawled (NULL or date in unixepoch integer format)
 *** Links (table)
