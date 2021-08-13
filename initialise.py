@@ -22,7 +22,7 @@ dbs = { 'wsdump.sqlite': '''
         'wsindex.sqlite': '''
             DROP TABLE IF EXISTS Pages;
             CREATE TABLE Pages
-            (   id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE
+            (   id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                 url         TEXT NOT NULL UNIQUE,
                 zip_text    TEXT,
                 crawled     INTEGER );
@@ -30,7 +30,7 @@ dbs = { 'wsdump.sqlite': '''
             CREATE TABLE Links
             (   from_id     INTEGER,
                 to_id       INTEGER,
-                UNIQUE (from_url, to_url) );
+                UNIQUE (from_id, to_id) );
             DROP TABLE IF EXISTS Words;
             CREATE TABLE Words
             (   id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
