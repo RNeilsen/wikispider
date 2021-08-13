@@ -44,17 +44,17 @@
     - cleaned (NULL or date in unixepoch integer format)
 ** wsindex.sqlite
 *** Pages (table)
-    - url (PK)
+    - id (PK int)
+    - url
     - compressed article body
     - crawled (NULL or date in unixepoch integer format)
 *** Links (table)
-    - from (FK)
-    - to (FK)
+    - from_id (FK)
+    - to_id (FK)
 *** Words (table)
-    - PK (int)
+    - id (int)
     - word
 *** Mentions (table)
-    - word (FK int)
-    - page (FK int)
+    - word_id (FK int)
+    - page_id (FK int)
     - position (int)
-  TODO continue
