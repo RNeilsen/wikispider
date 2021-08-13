@@ -6,17 +6,17 @@ import os, sqlite3
 dbs = { 'wsdump.sqlite': '''
             DROP TABLE IF EXISTS Pages;
             CREATE TABLE Pages
-            (   url         TEXT NOT NULL PRIMARY KEY UNIQUE,
+            (   pagename    TEXT NOT NULL PRIMARY KEY UNIQUE,
                 raw_html    TEXT,
                 crawled     INTEGER,
                 cleaned     INTEGER );
-            INSERT INTO Pages (url) VALUES 
-                ( 'https://en.wikipedia.org/wiki/Mathematics' ),
-				( 'https://en.wikipedia.org/wiki/Mathematicians' ),
-				( 'https://en.wikipedia.org/wiki/Applied_mathematics' ),
-				( 'https://en.wikipedia.org/wiki/Statistics' ),
-				( 'https://en.wikipedia.org/wiki/David_Hilbert' ),
-				( 'https://en.wikipedia.org/wiki/Richard_Feynman' );
+            INSERT INTO Pages (pagename) VALUES 
+                ( 'Mathematics' ),
+				( 'Mathematicians' ),
+				( 'Applied_mathematics' ),
+				( 'Statistics' ),
+				( 'David_Hilbert' ),
+				( 'Richard_Feynman' );
             VACUUM; ''',
         
         'wsindex.sqlite': '''
@@ -38,8 +38,8 @@ dbs = { 'wsdump.sqlite': '''
             DROP TABLE IF EXISTS Mentions;
             CREATE TABLE Mentions
             (   word_id     INTEGER NOT NULL,
-                page_id     TEXT NOT NULL,
-                position    INTEGER NOT NULL );
+                page_id     INTEGER NOT NULL,
+                position    INTEGER );
             VACUUM; '''}
 
 for f in dbs.keys():

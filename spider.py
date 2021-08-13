@@ -7,6 +7,11 @@ from time import time
 
 COMMIT_FREQ = 5
 
+
+def wikiurl(pagename):
+    return 'https://en.wikipedia.org/wiki/' + pagename
+
+
 conn = sqlite3.connect('wsdump.sqlite')
 cur = conn.cursor()
 
@@ -15,14 +20,15 @@ try:
 except ValueError:
     num_to_crawl = 10
 
-cur.execute('SELECT url FROM Pages ORDER BY crawled LIMIT ' + str(num_to_crawl))
+cur.execute('SELECT pagename FROM Pages ORDER BY crawled LIMIT ' + str(num_to_crawl))
 rows = cur.fetchall()
 rows.reverse()
 fails = 0
 crawled = 0
 while ( len(rows) > 0 ):
     row = rows.pop()
-    url = row[0]
+    pagename = row[0]
+    url = wikiurl(pagename)
     crawled += 1
     print(crawled, ': requesting', url)
     try:
@@ -41,8 +47,8 @@ while ( len(rows) > 0 ):
         else:
             continue
     
-    cur.execute('''INSERT OR REPLACE INTO Pages (url, raw_html, crawled) 
-                    VALUES (?, ?, ?)''', (url, r.text, int(time())))
+    cur.execute('''INSERT OR REPLACE INTO Pages (pagename, raw_html, crawled) 
+                    VALUES (?, ?, ?)''', (pagename, r.text, int(time())))
     
     if crawled % COMMIT_FREQ == 0:
         conn.commit()
