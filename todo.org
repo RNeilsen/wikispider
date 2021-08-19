@@ -4,26 +4,20 @@
 
 * Structure overview
 ** Spider
-   A spider that checks the *wsdump* db for pages that have the longest time since
-   last crawled, them downloads them and writes their raw html them to the db
-** Cleanup
-   A cleanup program that takes raw html blobs from the *wsdump* database, and
-   1. Extracts the usable links
-      - needs to identify only the links in the article body, not the sidebar,
-        nav box, links to talk pages, etc
-      - those links should be written back into the *wsdump* db with NULL crawled
-        date
-   2. Extracts the article body, compresses it, and stores it in an *index* database
-   3. Removes the raw html from the *wsdump* database but keeps that link 
-      marked as visited (the entire compressed wikipedia corpus is about 20GB but
-      uncompressed it's probably huge)
+   A spider that finds pages in wsindex.sqlite, firstly from the To_Crawl table,
+   and then from Pages, with the earliest added or crawled date, then downloads
+   them, and does the following:
+   1. Enters their pageid, raw_text, and crawled date into the Pages table
+   2. Cycles through their 'links' list, and for each entry:
+      if that title is already in Pages, add an entry to the Links table
+      if that title isn't in Pages, add an entry to the To_Crawl table
+   TODO: If a page, when downloaded, is a redirect, the page should be renamed
 ** Index
-   A program that takes the compressed articles in the *index* database, and creates 
-   a table of words, and a table of where words were used (many-to-many relation)
-   - each word could include its position in the article, for showing 
-     context snippets later during search
+   A program that takes the raw_text of pages in the *Pages* table, enters all
+   of their words into the Words table (if not already present), and enters a
+   reference to them to the Mentions table
 ** Pagerank
-   A program that processes the link structure and assigns pages in the *index* A
+   A program that processes the link structure and assigns pages in the *index* a
    pagerank
 ** Search
    A program that is given a word and returns a list of pageranked pages containing
@@ -33,20 +27,18 @@
     - return context snippets
     - search on phrases
 ** Initialise
-   A program that wipes databases and resets them (mainly for testing purposes)
+   A program that wipes the database and resets them (mainly for testing purposes)
 
 * Database overview
-** wsdump.sqlite
-*** Pages (table)
-    - pagename (PK)
-    - raw_html    TODO replace with wikitext?
-    - crawled (NULL or date in unixepoch integer format)
-    - cleaned (NULL or date in unixepoch integer format)
 ** wsindex.sqlite
+    - title
+    - added (NULL or date in unixepoch integer format)
+    - from_id (FK int)
 *** Pages (table)
-    - id (PK int)
-    - pagename
-    - compressed article body
+    - pageid (PK)
+    - title
+    - raw_text
+    - zip_text
     - crawled (NULL or date in unixepoch integer format)
 *** Links (table)
     - from_id (FK)
