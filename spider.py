@@ -1,18 +1,26 @@
-'''Reads urls from to_crawl.sqlite and dumps the raw html of the pages into
-dump.sqlite'''
+'''Downloads pages and enters new links to be crawled'''
 
-import sqlite3
-import requests
+import sqlite3, wikipedia
 from time import time
+
+def get_more_rows(cur, max_to_fetch):
+    cur.execute(f'SELECT title, from_id FROM To_Crawl ORDER BY added LIMIT {max_to_fetch}')
+    rows = []
+    more_rows = cur.fetchall()
+    if more_rows is not None:
+        rows += more_rows
+    if len(rows) < max_to_fetch:
+        cur.execute(f'SELECT title, NULL FROM Pages ORDER BY crawled LIMIT {max_to_fetch - len(rows)}')
+        more_rows = cur.fetchall()
+        if more_rows is not None:
+            rows += more_rows
+    if len(rows) == 0:
+        raise Exception("No rows to fetch!")
+    return rows
 
 COMMIT_FREQ = 5
 
-
-def wikiurl(pagename):
-    return 'https://en.wikipedia.org/wiki/' + pagename
-
-
-conn = sqlite3.connect('wsdump.sqlite')
+conn = sqlite3.connect('wsindex.sqlite')
 cur = conn.cursor()
 
 try:
@@ -20,36 +28,18 @@ try:
 except ValueError:
     num_to_crawl = 10
 
-cur.execute('SELECT pagename FROM Pages ORDER BY crawled LIMIT ' + str(num_to_crawl))
-rows = cur.fetchall()
-rows.reverse()
-fails = 0
-crawled = 0
-while ( len(rows) > 0 ):
-    row = rows.pop()
-    pagename = row[0]
-    url = wikiurl(pagename)
-    crawled += 1
-    print(crawled, ': requesting', url)
-    try:
-        r = requests.get(url)
-    except KeyboardInterrupt:
-        print('')
-        print('Aborted by user...')
-        break
+rows = get_more_rows(cur, num_to_crawl)
 
-    if not r:
-        print(f'Failed with response {r.statuscode} when getting', url)
-        fails += 1
-        if fails >= 5:
-            print('Failed 5 in a row, aborting...')
-            break
-        else:
-            continue
-    
-    cur.execute('''INSERT OR REPLACE INTO Pages (pagename, raw_html, crawled) 
-                    VALUES (?, ?, ?)''', (pagename, r.text, int(time())))
-    
+crawled = 0
+while crawled < num_to_crawl:
+    if len(rows) == 0:
+        rows = get_more_rows(cur, num_to_crawl - crawled)
+    row = rows.pop()
+
+    print(row)
+    # crawl page here
+
+    crawled += 1
     if crawled % COMMIT_FREQ == 0:
         conn.commit()
 
