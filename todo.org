@@ -29,24 +29,25 @@
 ** Initialise
    A program that wipes the database and resets them (mainly for testing purposes)
 
-* Database overview
-** wsindex.sqlite
-    - title
-    - added (NULL or date in unixepoch integer format)
-    - from_id (FK int)
-*** Pages (table)
-    - pageid (PK)
-    - title
-    - raw_text
-    - zip_text
-    - crawled (NULL or date in unixepoch integer format)
-*** Links (table)
-    - from_id (FK)
-    - to_id (FK)
-*** Words (table)
-    - id (int)
-    - word
-*** Mentions (table)
-    - word_id (FK int)
-    - page_id (FK int)
-    - position (int)
+* Database schema
+   CREATE TABLE To_Crawl
+   (  title       TEXT,
+      added       INTEGER,
+      from_id     INTEGER);
+   CREATE TABLE Pages
+   (  pageid      INTEGER NOT NULL PRIMARY KEY UNIQUE,
+      title       TEXT NOT NULL UNIQUE,
+      raw_text    TEXT,
+      zip_text    TEXT,
+      crawled     INTEGER );
+   CREATE TABLE Links
+   (  from_id     INTEGER,
+      to_id       INTEGER,
+      PRIMARY KEY (from_id, to_id) );
+   CREATE TABLE Words
+   (  id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+      word        TEXT );
+   CREATE TABLE Mentions
+   (  word_id     INTEGER NOT NULL,
+      page_id     INTEGER NOT NULL,
+      position    INTEGER );

@@ -5,27 +5,28 @@ import os, sqlite3
 
 inits = { 'wsindex.sqlite' : '''
             DROP TABLE IF EXISTS To_Crawl;
+            DROP TABLE IF EXISTS Pages;
+            DROP TABLE IF EXISTS Links;
+            DROP TABLE IF EXISTS Words;
+            DROP TABLE IF EXISTS Mentions;
+            
             CREATE TABLE To_Crawl
             (   title       TEXT,
-                added       INTEGER 
+                added       INTEGER,
                 from_id     INTEGER);
-            DROP TABLE IF EXISTS Pages;
             CREATE TABLE Pages
             (   pageid      INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
                 raw_text    TEXT,
                 zip_text    TEXT,
                 crawled     INTEGER );
-            DROP TABLE IF EXISTS Links;
             CREATE TABLE Links
             (   from_id     INTEGER,
                 to_id       INTEGER,
                 PRIMARY KEY (from_id, to_id) );
-            DROP TABLE IF EXISTS Words;
             CREATE TABLE Words
             (   id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                 word        TEXT );
-            DROP TABLE IF EXISTS Mentions;
             CREATE TABLE Mentions
             (   word_id     INTEGER NOT NULL,
                 page_id     INTEGER NOT NULL,
