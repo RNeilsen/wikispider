@@ -11,9 +11,9 @@ inits = { 'wsindex.sqlite' : '''
             DROP TABLE IF EXISTS Mentions;
             
             CREATE TABLE To_Crawl
-            (   title       TEXT,
+            (   title       TEXT NOT NULL,
                 added       INTEGER,
-                from_id     INTEGER);
+                from_id     INTEGER );
             CREATE TABLE Pages
             (   page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
@@ -38,7 +38,8 @@ inits = { 'wsindex.sqlite' : '''
                 ( 'Applied_mathematics' ),
                 ( 'Statistics' ),
                 ( 'David_Hilbert' ),
-                ( 'Richard_Feynman' );
+                ( 'Richard_Feynman' ),
+                ( 'dablenuidaho' );
                 VACUUM; '''}
 
 for f in inits.keys():
