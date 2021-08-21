@@ -15,7 +15,7 @@ inits = { 'wsindex.sqlite' : '''
                 added       INTEGER,
                 from_id     INTEGER);
             CREATE TABLE Pages
-            (   pageid      INTEGER NOT NULL PRIMARY KEY UNIQUE,
+            (   page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
                 raw_text    TEXT,
                 zip_text    TEXT,
