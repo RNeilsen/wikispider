@@ -69,7 +69,7 @@ while crawled < num_to_crawl:
     cur.execute(f'''DELETE FROM To_Crawl WHERE 
             title=? or title=? ''', (title, wp.title))
     if from_id is not None:
-        cur.execute(f'''INSERT INTO Links (from_id, to_id) VALUES (?,?)''',
+        cur.execute(f'''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''',
                 (from_id, wp.pageid) )
     for link in links:
         cur.execute('''SELECT page_id FROM Pages WHERE title=?''', (link,))
