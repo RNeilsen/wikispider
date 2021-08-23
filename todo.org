@@ -4,10 +4,12 @@
 
 * Structure overview
 ** Spider
-   A spider that finds pages in wsindex.sqlite, firstly from the To_Crawl table,
-   and then from Pages, with the earliest added or crawled date, then downloads
-   them, and does the following:
+   A spider that finds pages in wsindex.sqlite, firstly from the 
+   Open_Links table, and then from Pages, with the earliest added or 
+   crawled date, then downloads them, and does the following:
    1. Enters their pageid, raw_text, and crawled date into the Pages table
+   2. Find all unresolved links pointing to the same title in Open_Links,
+      and add those entries to Links
    2. Cycles through their 'links' list, and for each entry:
       if that title is already in Pages, add an entry to the Links table
       if that title isn't in Pages, add an entry to the To_Crawl table
@@ -30,10 +32,11 @@
    A program that wipes the database and resets them (mainly for testing purposes)
 
 * Database schema
-   CREATE TABLE To_Crawl
+   CREATE TABLE Open_Links
    (  title       TEXT NOT NULL,
       added       INTEGER,
-      from_id     INTEGER );
+      from_id     INTEGER,
+      PRIMARY KEY (title, from_id) );
    CREATE TABLE Pages
    (  page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
       title       TEXT NOT NULL UNIQUE,

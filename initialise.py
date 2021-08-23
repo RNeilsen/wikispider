@@ -4,16 +4,17 @@ titles to be crawled as a starting seed'''
 import os, sqlite3
 
 inits = { 'wsindex.sqlite' : '''
-            DROP TABLE IF EXISTS To_Crawl;
+            DROP TABLE IF EXISTS Open_Links;
             DROP TABLE IF EXISTS Pages;
             DROP TABLE IF EXISTS Links;
             DROP TABLE IF EXISTS Words;
             DROP TABLE IF EXISTS Mentions;
             
-            CREATE TABLE To_Crawl
+            CREATE TABLE Open_Links
             (   title       TEXT NOT NULL,
                 added       INTEGER,
-                from_id     INTEGER );
+                from_id     INTEGER,
+                PRIMARY KEY (title, from_id) );
             CREATE TABLE Pages
             (   page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
@@ -32,7 +33,7 @@ inits = { 'wsindex.sqlite' : '''
                 page_id     INTEGER NOT NULL,
                 position    INTEGER );
             
-            INSERT INTO To_Crawl (title) VALUES
+            INSERT INTO Open_Links (title) VALUES
                 ( 'Mathematics' ),
                 ( 'Mathematicians' ),
                 ( 'Applied_mathematics' ),
