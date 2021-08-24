@@ -51,6 +51,13 @@ while crawled < num_to_crawl:
     
     (page_id, title) = rows.pop()
     
+    # handling disambig pages is not yet supported
+    if title.endswith('(disambiguation)'):
+        print(f"Warning: {title} in links list, replacing in Open_Links")
+        cur.execute('''UPDATE Open_Links SET added=? WHERE title = ?''' , 
+                (crawl_time + 120, title) )
+        continue
+
     # Fetch page
     print("Attempting to open", (page_id, title), "... ", end='', flush=True)
     crawl_time = int(time())
