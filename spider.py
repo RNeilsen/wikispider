@@ -7,6 +7,7 @@ MAX_CONSEC_FAILS = 5
 COMMIT_FREQ = 1
 MAX_ROWS_AT_A_TIME = 10
 DO_PRELOAD = False
+FAILURE_PENALTY = 86400     # num seconds to add to crawl time for a failed pageload
 wikipedia.set_rate_limiting(True)
 
 def get_more_rows(cur, max_to_fetch):
@@ -55,7 +56,7 @@ while crawled < num_to_crawl:
     if title.endswith('(disambiguation)'):
         print(f"Warning: {title} in links list, replacing in Open_Links")
         cur.execute('''UPDATE Open_Links SET added=? WHERE title = ?''' , 
-                (crawl_time + 120, title) )
+                (crawl_time + FAILURE_PENALTY, title) )
         continue
 
     # Fetch page
@@ -70,7 +71,7 @@ while crawled < num_to_crawl:
             print('Could not find title, replacing in Open_Links')
             fails += 1
             cur.execute('''UPDATE Open_Links SET added=? WHERE title = ?''' , 
-                    (crawl_time + 120, title) )
+                    (crawl_time + FAILURE_PENALTY, title) )
             continue
     print('success!', wp, flush=True)
 
