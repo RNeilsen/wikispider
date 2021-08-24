@@ -5,9 +5,12 @@ from time import time
 
 MAX_CONSEC_FAILS = 5
 COMMIT_FREQ = 1
+MAX_ROWS_AT_A_TIME = 10
+DO_PRELOAD = False
 wikipedia.set_rate_limiting(True)
 
 def get_more_rows(cur, max_to_fetch):
+    max_to_fetch = min(MAX_ROWS_AT_A_TIME, max_to_fetch)
     cur.execute(f'SELECT NULL, title FROM Open_Links ORDER BY added LIMIT {max_to_fetch}')
     rows = []
     more_rows = cur.fetchall()
@@ -52,10 +55,10 @@ while crawled < num_to_crawl:
     print("Attempting to open", (page_id, title), "... ", end='', flush=True)
     crawl_time = int(time())
     if page_id is not None:
-        wp = wikipedia.page(pageid=page_id, preload=True)
+        wp = wikipedia.page(pageid=page_id, preload=DO_PRELOAD)
     else:
         try:
-            wp = wikipedia.page(title, preload=True, auto_suggest=False)
+            wp = wikipedia.page(title, preload=DO_PRELOAD, auto_suggest=False)
         except wikipedia.exceptions.PageError:
             print('Could not find title, replacing in Open_Links')
             fails += 1
