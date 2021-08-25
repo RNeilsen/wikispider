@@ -13,6 +13,7 @@ wikipedia.set_rate_limiting(True)
 
 def get_more_rows(cur, max_to_fetch):
     max_to_fetch = min(MAX_ROWS_AT_A_TIME, max_to_fetch)
+    if max_to_fetch < 1: max_to_fetch = 1
     cur.execute(f'SELECT NULL, title FROM Open_Links ORDER BY added LIMIT {max_to_fetch}')
     rows = []
     more_rows = cur.fetchall()
