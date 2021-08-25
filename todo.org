@@ -14,7 +14,7 @@
       if that title is already in Pages, add an entry to the Links table
       if that title isn't in Pages, add an entry to the To_Crawl table
    TODO: If a page, when downloaded, is a redirect, the page should be renamed
-** Index
+** Indexer
    A program that takes the raw_text of pages in the *Pages* table, enters all
    of their words into the Words table (if not already present), and enters a
    reference to them to the Mentions table
@@ -30,6 +30,8 @@
     - search on phrases
 ** Initialise
    A program that wipes the database and resets them (mainly for testing purposes)
+** Vacuum
+   A simple program that initiates a vacuum operation
 
 * Database schema
    CREATE TABLE Open_Links
@@ -41,7 +43,7 @@
    (  page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
       title       TEXT NOT NULL UNIQUE,
       raw_text    TEXT,
-      zip_text    TEXT,
+      zip_text    BLOB,
       crawled     INTEGER );
    CREATE TABLE Links
    (  from_id     INTEGER,
@@ -49,8 +51,9 @@
       PRIMARY KEY (from_id, to_id) );
    CREATE TABLE Words
    (  id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-      word        TEXT );
+      word        TEXT UNIQUE);
    CREATE TABLE Mentions
    (  word_id     INTEGER NOT NULL,
-      page_id     INTEGER NOT NULL,
-      position    INTEGER );
+      page_id     INTEGER NOT NULL );
+      
+   PRAGMA journal_mode=WAL;

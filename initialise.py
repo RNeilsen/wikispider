@@ -19,7 +19,7 @@ inits = { 'wsindex.sqlite' : '''
             (   page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
                 raw_text    TEXT,
-                zip_text    TEXT,
+                zip_text    BLOB,
                 crawled     INTEGER );
             CREATE TABLE Links
             (   from_id     INTEGER,
@@ -27,12 +27,14 @@ inits = { 'wsindex.sqlite' : '''
                 PRIMARY KEY (from_id, to_id) );
             CREATE TABLE Words
             (   id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-                word        TEXT );
+                word        TEXT UNIQUE );
             CREATE TABLE Mentions
             (   word_id     INTEGER NOT NULL,
                 page_id     INTEGER NOT NULL,
-                position    INTEGER );
+                PRIMARY KEY (word_id, page_id) );
             
+            PRAGMA journal_mode=WAL;
+
             INSERT INTO Open_Links (title) VALUES
                 ( 'Mathematics' ),
                 ( 'Mathematicians' ),
