@@ -55,7 +55,7 @@ while crawled < num_to_crawl:
         conn.commit()
         rows = get_more_rows(cur, num_to_crawl - crawled)
     
-    (page_id, title) = rows.pop()
+    (pageid, title) = rows.pop()
     
     # handling disambig pages is not yet supported
     if title.endswith('(disambiguation)'):
@@ -65,10 +65,10 @@ while crawled < num_to_crawl:
         continue
 
     # Fetch page
-    print("Attempting to open", (page_id, title), "... ", end='', flush=True)
+    print("Attempting to open", (pageid, title), "... ", end='', flush=True)
     crawl_time = int(time())
-    if page_id is not None:
-        wp = wikipedia.page(pageid=page_id, preload=DO_PRELOAD)
+    if pageid is not None:
+        wp = wikipedia.page(pageid=pageid, preload=DO_PRELOAD)
     else:
         try:
             wp = wikipedia.page(title, preload=DO_PRELOAD, auto_suggest=False)
@@ -79,6 +79,7 @@ while crawled < num_to_crawl:
                     (crawl_time + FAILURE_PENALTY, title) )
             continue
     print('success!', wp, flush=True)
+    pageid = wp.pageid
 
     # Resolve all links to this title in Open_Links
     cur.execute('''SELECT from_id FROM Open_Links WHERE title=? OR title=?''',
@@ -88,7 +89,7 @@ while crawled < num_to_crawl:
             (title=? OR title=?) AND (from_id IS NULL OR from_id=?)''', 
             [(title, wp.title, from_id[0]) for from_id in from_ids] )
     cur.executemany(f'''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''',
-            [(from_id[0], wp.pageid) for from_id in from_ids if from_id is not None] )
+            [(from_id[0], pageid) for from_id in from_ids if from_id is not None] )
 
     # Check if we've already crawled this page recently, skip if so
     cur.execute('''SELECT crawled FROM Pages WHERE page_id=?''', (wp.pageid,))
@@ -100,7 +101,7 @@ while crawled < num_to_crawl:
     # Enter page into Pages
     cur.execute('''INSERT OR REPLACE INTO Pages 
             (page_id, title, raw_text, crawled) VALUES (?, ?, ?, ?)''',
-            (wp.pageid, wp.title, wp.content, crawl_time) )
+            (pageid, wp.title, wp.content, crawl_time) )
 
     # Add all of this article's links into Links (if already crawled) or Open_Links (if not)
     links = wp.links
@@ -109,11 +110,11 @@ while crawled < num_to_crawl:
         found_link = cur.fetchone()
         if found_link is not None:
             cur.execute('''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''', 
-                    (wp.pageid, found_link[0]))
+                    (pageid, found_link[0]))
         else:
             cur.execute('''INSERT OR IGNORE INTO Open_Links 
                     (title, added, from_id) VALUES (?,?,?)''',
-                    (link, crawl_time, wp.pageid))
+                    (link, crawl_time, pageid))
 
     
 conn.commit()
