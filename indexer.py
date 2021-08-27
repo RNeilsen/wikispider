@@ -1,7 +1,7 @@
 import sqlite3
 import zlib
 
-conn = sqlite3.connect('wsindex.sqlite', timeout=20.0)
+conn = sqlite3.connect('wsindex.sqlite')
 cur = conn.cursor()
 
 MAX_ROWS_AT_A_TIME = 10
@@ -35,7 +35,8 @@ while indexed < num_to_index:
     (pageid, title, raw_text, crawled) = rows.pop()
     print(f'Indexing {pageid}:', title, '...', end='', flush=True)
     
-    words = set(raw_text.lower().split()).difference(stop_words)
+    words = {word.lower().strip() for word in raw_text.split()}
+    words.difference_update(stop_words)
 
     for word in words:
         cur.execute('''SELECT id FROM Words WHERE word=?''', (word,))
