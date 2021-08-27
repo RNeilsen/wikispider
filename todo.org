@@ -40,7 +40,7 @@
       from_id     INTEGER,
       PRIMARY KEY (title, from_id) );
    CREATE TABLE Pages
-   (  page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
+   (  pageid     INTEGER NOT NULL PRIMARY KEY UNIQUE,
       title       TEXT NOT NULL UNIQUE,
       raw_text    TEXT,
       zip_text    BLOB,
@@ -54,6 +54,6 @@
       word        TEXT UNIQUE);
    CREATE TABLE Mentions
    (  word_id     INTEGER NOT NULL,
-      page_id     INTEGER NOT NULL );
+      pageid     INTEGER NOT NULL );
       
    PRAGMA journal_mode=WAL;
