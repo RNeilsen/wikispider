@@ -16,7 +16,7 @@ inits = { 'wsindex.sqlite' : '''
                 from_id     INTEGER,
                 PRIMARY KEY (title, from_id) );
             CREATE TABLE Pages
-            (   page_id     INTEGER NOT NULL PRIMARY KEY UNIQUE,
+            (   pageid     INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
                 raw_text    TEXT,
                 zip_text    BLOB,
@@ -30,8 +30,8 @@ inits = { 'wsindex.sqlite' : '''
                 word        TEXT UNIQUE );
             CREATE TABLE Mentions
             (   word_id     INTEGER NOT NULL,
-                page_id     INTEGER NOT NULL,
-                PRIMARY KEY (word_id, page_id) );
+                pageid     INTEGER NOT NULL,
+                PRIMARY KEY (word_id, pageid) );
             
             PRAGMA journal_mode=WAL;
 
