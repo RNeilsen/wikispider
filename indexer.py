@@ -43,7 +43,7 @@ while indexed < num_to_index:
         result = cur.fetchone()
         if result is None:
             cur.execute('''INSERT OR IGNORE INTO Words (word) VALUES (?)''', (word,))
-            result = cur.lastrowid
+            result = (cur.lastrowid,)
         word_id = result[0]
 
         cur.execute('''INSERT OR IGNORE INTO Mentions (word_id, pageid) VALUES (?,?)''',
