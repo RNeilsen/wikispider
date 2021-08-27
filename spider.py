@@ -103,6 +103,7 @@ while crawled < num_to_crawl:
     pageid = wp.pageid
     
     crawled += 1
+    fails = 0
 
     # Resolve all links to this title in Open_Links
     cur.execute('''SELECT from_id FROM Open_Links WHERE title=? OR title=?''',
