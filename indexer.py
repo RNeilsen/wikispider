@@ -10,7 +10,7 @@ COMMIT_FREQ = 1
 def get_more_rows(max_to_fetch):
     max_to_fetch = min(max_to_fetch, MAX_ROWS_AT_A_TIME)
     if max_to_fetch < 1: max_to_fetch = 1
-    cur.execute('''SELECT page_id, title, raw_text, crawled FROM Pages 
+    cur.execute('''SELECT pageid, title, raw_text, crawled FROM Pages 
                 WHERE zip_text IS NULL 
                 ORDER BY crawled LIMIT ?''', (max_to_fetch,))
     return cur.fetchall()
@@ -32,8 +32,8 @@ while indexed < num_to_index:
 
     if len(rows) == 0:
         rows = get_more_rows(num_to_index - indexed)
-    (page_id, title, raw_text, crawled) = rows.pop()
-    print(f'Indexing {page_id}:', title, '...', end='', flush=True)
+    (pageid, title, raw_text, crawled) = rows.pop()
+    print(f'Indexing {pageid}:', title, '...', end='', flush=True)
     
     words = set(raw_text.lower().split()).difference(stop_words)
 
@@ -45,11 +45,11 @@ while indexed < num_to_index:
             result = cur.lastrowid
         word_id = result[0]
 
-        cur.execute('''INSERT OR IGNORE INTO Mentions (word_id, page_id) VALUES (?,?)''',
-                (word_id, page_id))
+        cur.execute('''INSERT OR IGNORE INTO Mentions (word_id, pageid) VALUES (?,?)''',
+                (word_id, pageid))
     
-    cur.execute('''REPLACE INTO Pages (page_id, title, zip_text, crawled) VALUES (?,?,?,?)''', 
-            (page_id, title, zlib.compress(raw_text.encode()), crawled))
+    cur.execute('''REPLACE INTO Pages (pageid, title, zip_text, crawled) VALUES (?,?,?,?)''', 
+            (pageid, title, zlib.compress(raw_text.encode()), crawled))
 
     print('success!', flush=True)
     
