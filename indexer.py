@@ -13,7 +13,10 @@ def get_more_rows(max_to_fetch):
     cur.execute('''SELECT pageid, title, raw_text, crawled FROM Pages 
                 WHERE zip_text IS NULL 
                 ORDER BY crawled LIMIT ?''', (max_to_fetch,))
-    return cur.fetchall()
+    results = cur.fetchall()
+    if len(results) < 1:
+        raise Exception("No rows found!")
+    return results
 
 with open('stopwords.txt') as f:
     stop_words = {word.strip() for word in f.readlines()}
