@@ -5,8 +5,8 @@ from time import time
 from initialise import INDEX_FILE_PATH
 
 MAX_CONSEC_FAILS = 5
-COMMIT_FREQ = 1
-MAX_ROWS_AT_A_TIME = 10
+COMMIT_FREQ = 10
+MAX_ROWS_AT_A_TIME = 100
 DO_PRELOAD = False
 RECRAWL_TIME = 86400        # num seconds before recrawling a previously-crawled page
 FAILURE_PENALTY = 86400     # num seconds to add to crawl time for a failed pageload
@@ -54,6 +54,12 @@ def get_more_rows(cur, max_to_fetch):
     return rows
 
 
+def execute_queue(cur, queue):
+    for (query, args) in queue:
+        cur.execute(query, args)
+    queue.clear()
+
+
 conn = sqlite3.connect(INDEX_FILE_PATH)
 cur = conn.cursor()
 
@@ -64,41 +70,45 @@ except ValueError:
 
 rows = get_more_rows(cur, num_to_crawl)
 (crawled, fails) = (0, 0)
+query_queue = []
 
 while crawled < num_to_crawl:
     if fails >= MAX_CONSEC_FAILS:
         print(f'{fails} failures in a row, terminating...')
         break
 
-    if crawled % COMMIT_FREQ == 0:
+    if crawled % COMMIT_FREQ == 0 or len(rows) == 0:
+        execute_queue(cur, query_queue)
+        print("Committing ... ", end='', flush=True)
         conn.commit()
-    
-    if len(rows) == 0:
-        conn.commit()
-        rows = get_more_rows(cur, num_to_crawl - crawled)
+        print("complete.", flush=True)
+        
+        if len(rows) == 0:
+            rows = get_more_rows(cur, num_to_crawl - crawled)
     
     (pageid, title) = rows.pop()
     
     # handling disambig pages is not yet supported
     if title.endswith('(disambiguation)'):
         print(f"Warning: {title} in links list, replacing in Open_Links")
-        cur.execute('''UPDATE Open_Links SET added=? WHERE title = ?''' , 
-                (crawl_time + FAILURE_PENALTY, title) )
+        query_queue.append( ('''UPDATE Open_Links SET added=? WHERE title = ?''',
+                (crawl_time + FAILURE_PENALTY, title)) )
         continue
 
     # Fetch page
-    print("Attempting to open", (pageid, title), "... ", end='', flush=True)
     crawl_time = int(time())
     if pageid is not None:
+        print(f"{crawled}: Attempting to open pageid", (pageid,), "... ", end='', flush=True)
         wp = wikipedia.page(pageid=pageid, preload=DO_PRELOAD)
     else:
+        print(f"{crawled}: Attempting to open", repr(title), "... ", end='', flush=True)
         try:
             wp = wikipedia.page(title, preload=DO_PRELOAD, auto_suggest=False)
         except wikipedia.exceptions.PageError:
             print('Could not find title, replacing in Open_Links')
             fails += 1
-            cur.execute('''UPDATE Open_Links SET added=? WHERE title = ?''' , 
-                    (crawl_time + FAILURE_PENALTY, title) )
+            query_queue.append( ('''UPDATE Open_Links SET added=? WHERE title = ?''' , 
+                    (crawl_time + FAILURE_PENALTY, title)) )
             continue
     print('success!', wp, flush=True)
     pageid = wp.pageid
@@ -110,11 +120,11 @@ while crawled < num_to_crawl:
     cur.execute('''SELECT from_id FROM Open_Links WHERE title=? OR title=?''',
             (title, wp.title))
     from_ids = cur.fetchall()
-    cur.executemany(f'''DELETE FROM Open_Links WHERE 
+    query_queue.extend( [( f'''DELETE FROM Open_Links WHERE 
             (title=? OR title=?) AND (from_id IS NULL OR from_id=?)''', 
-            [(title, wp.title, from_id[0]) for from_id in from_ids] )
-    cur.executemany(f'''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''',
-            [(from_id[0], pageid) for from_id in from_ids if from_id is not None] )
+            (title, wp.title, from_id[0]) ) for from_id in from_ids] )
+    query_queue.extend( [( f'''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''',
+            (from_id[0], pageid) ) for from_id in from_ids if from_id is not None] )
 
     # Check if we've already crawled this page recently, skip if so
     cur.execute('''SELECT crawled FROM Pages WHERE pageid=?''', (wp.pageid,))
@@ -124,9 +134,9 @@ while crawled < num_to_crawl:
             continue
 
     # Enter page into Pages
-    cur.execute('''INSERT OR REPLACE INTO Pages 
+    query_queue.append( ('''INSERT OR REPLACE INTO Pages 
             (pageid, title, raw_text, crawled) VALUES (?, ?, ?, ?)''',
-            (pageid, wp.title, wp.content, crawl_time) )
+            (pageid, wp.title, wp.content, crawl_time)) )
 
     # Add all of this article's links into Links (if already crawled) or Open_Links (if not)
     links = wp.links
@@ -134,12 +144,12 @@ while crawled < num_to_crawl:
         cur.execute('''SELECT pageid FROM Pages WHERE title=?''', (link,))
         found_link = cur.fetchone()
         if found_link is not None:
-            cur.execute('''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''', 
-                    (pageid, found_link[0]))
+            query_queue.append( ('''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''', 
+                    (pageid, found_link[0])) )
         else:
-            cur.execute('''INSERT OR IGNORE INTO Open_Links 
+            query_queue.append( ('''INSERT OR IGNORE INTO Open_Links 
                     (title, added, from_id) VALUES (?,?,?)''',
-                    (link, crawl_time, pageid))
+                    (link, crawl_time, pageid)) )
 
     
 conn.commit()
