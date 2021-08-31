@@ -1,4 +1,3 @@
-from indexer import INDEX_FILE_PATH
 import sqlite3
 
 from initialise import INDEX_FILE_PATH
