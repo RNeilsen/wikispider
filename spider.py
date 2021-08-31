@@ -139,7 +139,12 @@ while crawled < num_to_crawl:
             (pageid, wp.title, wp.content, crawl_time)) )
 
     # Add all of this article's links into Links (if already crawled) or Open_Links (if not)
-    links = wp.links
+    try:
+        links = wp.links
+    except KeyError:    
+        # avoid a bug in wikipedia library on pages with no links
+        # example: https://en.wikipedia.org/w/index.php?title=Spectrochemistry&oldid=1029802172
+        continue
     for link in links:
         cur.execute('''SELECT pageid FROM Pages WHERE title=?''', (link,))
         found_link = cur.fetchone()
