@@ -60,7 +60,7 @@ def execute_queue(cur, queue):
     queue.clear()
 
 
-conn = sqlite3.connect(INDEX_FILE_PATH)
+conn = sqlite3.connect(INDEX_FILE_PATH, timeout=20.0)
 cur = conn.cursor()
 
 try:

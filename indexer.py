@@ -5,7 +5,7 @@ from initialise import INDEX_FILE_PATH
 MAX_ROWS_AT_A_TIME = 10
 COMMIT_FREQ = 1
 
-conn = sqlite3.connect(INDEX_FILE_PATH)
+conn = sqlite3.connect(INDEX_FILE_PATH, timeout=20.0)
 cur = conn.cursor()
 
 def get_more_rows(max_to_fetch):
