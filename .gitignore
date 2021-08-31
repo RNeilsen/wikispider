@@ -1,2 +1,5 @@
 .vscode/settings.json
 *.sqlite
+dbs
+test.py
+__pycache__/
