@@ -116,16 +116,6 @@ while crawled < num_to_crawl:
     crawled += 1
     fails = 0
 
-    # Resolve all links to this title in Open_Links
-    cur.execute('''SELECT from_id FROM Open_Links WHERE title=? OR title=?''',
-            (title, wp.title))
-    from_ids = cur.fetchall()
-    query_queue.extend( [( f'''DELETE FROM Open_Links WHERE 
-            (title=? OR title=?) AND (from_id IS NULL OR from_id=?)''', 
-            (title, wp.title, from_id[0]) ) for from_id in from_ids] )
-    query_queue.extend( [( f'''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''',
-            (from_id[0], pageid) ) for from_id in from_ids if from_id is not None] )
-
     # Check if we've already crawled this page recently, skip if so
     cur.execute('''SELECT crawled FROM Pages WHERE pageid=?''', (wp.pageid,))
     found_record = cur.fetchone()
@@ -155,6 +145,16 @@ while crawled < num_to_crawl:
             query_queue.append( ('''INSERT OR IGNORE INTO Open_Links 
                     (title, added, from_id) VALUES (?,?,?)''',
                     (link, crawl_time, pageid)) )
+
+    # Resolve all links to this title in Open_Links
+    cur.execute('''SELECT from_id FROM Open_Links WHERE title=? OR title=?''',
+            (title, wp.title))
+    from_ids = cur.fetchall()
+    query_queue.extend( [( f'''DELETE FROM Open_Links WHERE 
+            (title=? OR title=?) AND (from_id IS NULL OR from_id=?)''', 
+            (title, wp.title, from_id[0]) ) for from_id in from_ids] )
+    query_queue.extend( [( f'''INSERT OR IGNORE INTO Links (from_id, to_id) VALUES (?,?)''',
+            (from_id[0], pageid) ) for from_id in from_ids if from_id is not None] )
 
     
 conn.commit()
