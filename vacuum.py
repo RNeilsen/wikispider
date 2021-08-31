@@ -1,6 +1,9 @@
+from indexer import INDEX_FILE_PATH
 import sqlite3
 
-conn = sqlite3.connect('wsindex.sqlite')
+from initialise import INDEX_FILE_PATH
+
+conn = sqlite3.connect(INDEX_FILE_PATH)
 cur = conn.cursor()
 
 print('Vacuuming...', end='', flush=True)

@@ -2,6 +2,7 @@
 
 import sqlite3, wikipedia
 from time import time
+from initialise import INDEX_FILE_PATH
 
 MAX_CONSEC_FAILS = 5
 COMMIT_FREQ = 1
@@ -53,7 +54,7 @@ def get_more_rows(cur, max_to_fetch):
     return rows
 
 
-conn = sqlite3.connect('wsindex.sqlite')
+conn = sqlite3.connect(INDEX_FILE_PATH)
 cur = conn.cursor()
 
 try:

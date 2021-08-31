@@ -1,9 +1,10 @@
 '''Completely wipes and resets the database, and inserts a few page
 titles to be crawled as a starting seed'''
 
+INDEX_FILE_PATH = 'dbs/wsindex.sqlite'
 import os, sqlite3
 
-inits = { 'wsindex.sqlite' : '''
+inits = { INDEX_FILE_PATH : '''
             DROP TABLE IF EXISTS Open_Links;
             DROP TABLE IF EXISTS Pages;
             DROP TABLE IF EXISTS Links;
@@ -45,18 +46,22 @@ inits = { 'wsindex.sqlite' : '''
                 ( 'dablenuidaho' );
                 VACUUM; '''}
 
-for f in inits.keys():
-    if os.path.isfile(f):
-        resp = input('Wipe ' + f + '? (y/N) ')
-        if resp.lower() != 'y':
-            continue
-    else:
-        print(f, 'not found, initialising')
+def main():
+    for f in inits.keys():
+        if os.path.isfile(f):
+            resp = input('Wipe ' + f + '? (y/N) ')
+            if resp.lower() != 'y':
+                continue
+        else:
+            print(f, 'not found, initialising')
 
-    conn = sqlite3.connect(f)
-    cur = conn.cursor()
+        conn = sqlite3.connect(f)
+        cur = conn.cursor()
 
-    cur.executescript(inits[f])
+        cur.executescript(inits[f])
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+
+if __name__ == '__main__':
+    main()

@@ -1,11 +1,12 @@
 import sqlite3
 import zlib
-
-conn = sqlite3.connect('wsindex.sqlite')
-cur = conn.cursor()
+from initialise import INDEX_FILE_PATH
 
 MAX_ROWS_AT_A_TIME = 10
 COMMIT_FREQ = 1
+
+conn = sqlite3.connect(INDEX_FILE_PATH)
+cur = conn.cursor()
 
 def get_more_rows(max_to_fetch):
     max_to_fetch = min(max_to_fetch, MAX_ROWS_AT_A_TIME)
