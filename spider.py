@@ -85,7 +85,13 @@ query_queue = []
 
 while crawled < num_to_crawl:
     if fails >= MAX_CONSEC_FAILS:
-        print(f'{fails} failures in a row, terminating...')
+        print(f'{fails} failures in a row, ending crawl...')
+
+        execute_queue(cur, query_queue)
+        print("Committing ... ", end='', flush=True)
+        conn.commit()
+        print("complete.", flush=True)
+        
         break
 
     if crawled % COMMIT_FREQ == 0 or len(rows) == 0:
