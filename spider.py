@@ -16,8 +16,9 @@ def get_more_rows(cur, max_to_fetch):
     max_to_fetch = min(MAX_ROWS_AT_A_TIME, max_to_fetch)
     if max_to_fetch < 1: max_to_fetch = 1
     
-    # 
-    # [ ( table, ( [select_fields], order_field, [(where_req, where_val)] ) ]
+    # [ ( table, ( [select_fields], order_field, [(where condition tuple] ) ] OR
+    # where condition tuple: either (column, value) for =, or (column, cmp, value)
+    # for (column, value) value can be None/'NULL' (for 'IS NULL') or 'NOT NULL' (for 'IS NOT NULL')
     search_order = [ 
             # ( 'Pages',      ( ['pageid', 'title'], 'crawled', [('raw_text', None)] ) ),
             ( 'Open_Links', ( ['NULL', 'title'], 'added', [] ) ),
@@ -31,12 +32,22 @@ def get_more_rows(cur, max_to_fetch):
         where_values = tuple()
         if where_clauses is not None and len(where_clauses) > 0:
             stmt += 'WHERE 1 '
-            for (where_col, where_val) in where_clauses:
-                if where_val is None:
-                    stmt += 'AND ' + where_col + ' IS NULL '
-                else:
-                    stmt += 'AND ' + where_col + '=? '
+            for where_condition in where_clauses:
+                if len(where_condition) == 2:
+                    (where_col, where_val) = where_condition
+                    if where_val is None or where_val == 'NULL':
+                        stmt += 'AND ' + where_col + ' IS NULL '
+                    elif where_val == 'NOT NULL':
+                        stmt += 'AND ' + where_col + ' IS NOT NULL '
+                    else:
+                        stmt += 'AND ' + where_col + '=? '
+                        where_values += (where_val,)
+                elif len(where_condition) == 3:
+                    (where_col, where_cmp, where_val) = where_condition
+                    stmt += 'AND ' + where_col + where_cmp + '? '
                     where_values += (where_val,)
+                else:
+                    raise Exception("Unrecognised where_condition format:", where_condition)
         
         if order_field is not None:
             stmt += f'ORDER BY {order_field} '
