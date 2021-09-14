@@ -5,14 +5,15 @@ INDEX_FILE_PATH = 'dbs/wsindex.sqlite'
 import os, sqlite3
 
 inits = { INDEX_FILE_PATH : '''
-            DROP TABLE IF EXISTS Open_Links;
+            DROP TABLE IF EXISTS Crawl_Queue;
             DROP TABLE IF EXISTS Pages;
             DROP TABLE IF EXISTS Links;
             DROP TABLE IF EXISTS Words;
             DROP TABLE IF EXISTS Mentions;
             
-            CREATE TABLE Open_Links
+            CREATE TABLE Crawl_Queue
             (   title       TEXT NOT NULL,
+                pageid      INTEGER,
                 added       INTEGER,
                 from_id     INTEGER,
                 status      INTEGER DEFAULT 10,
@@ -38,7 +39,7 @@ inits = { INDEX_FILE_PATH : '''
             
             PRAGMA journal_mode=WAL;
 
-            INSERT INTO Open_Links (title) VALUES
+            INSERT INTO Crawl_Queue (title) VALUES
                 ( 'Mathematics' ),
                 ( 'Mathematicians' ),
                 ( 'Applied_mathematics' ),
