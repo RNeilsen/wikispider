@@ -15,14 +15,14 @@ inits = { INDEX_FILE_PATH : '''
             (   title       TEXT NOT NULL,
                 added       INTEGER,
                 from_id     INTEGER,
-                checkout_id INTEGER,
-                checked_out INTEGER,
+                status      INTEGER DEFAULT 10,
                 PRIMARY KEY (title, from_id) );
             CREATE TABLE Pages
             (   pageid      INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
                 raw_text    TEXT,
                 zip_text    BLOB,
+                status      INTEGER,
                 crawled     INTEGER );
             CREATE TABLE Links
             (   from_id     INTEGER,

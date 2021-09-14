@@ -38,14 +38,14 @@
    (  title       TEXT NOT NULL,
       added       INTEGER,
       from_id     INTEGER,
-      checkout_id INTEGER,
-      checked_out INTEGER,
+      status      INTEGER DEFAULT 10,
       PRIMARY KEY (title, from_id) );
    CREATE TABLE Pages
    (  pageid      INTEGER NOT NULL PRIMARY KEY UNIQUE,
       title       TEXT NOT NULL UNIQUE,
       raw_text    TEXT,
       zip_text    BLOB,
+      status      INTEGER,
       crawled     INTEGER );
    CREATE TABLE Links
    (  from_id     INTEGER,
@@ -53,9 +53,21 @@
       PRIMARY KEY (from_id, to_id) );
    CREATE TABLE Words
    (  id          INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
-      word        TEXT UNIQUE);
+      word        TEXT UNIQUE );
    CREATE TABLE Mentions
    (  word_id     INTEGER NOT NULL,
-      pageid     INTEGER NOT NULL );
+      pageid      INTEGER NOT NULL,
+      PRIMARY KEY (word_id, pageid) );
       
    PRAGMA journal_mode=WAL;
+
+* Status codes
+   0-9:  Priority crawl
+   10:   Not yet crawled
+   20:   Scheduled for re-crawl
+   30:   Checked out for crawling
+   40:   Successfully crawled, awaiting indexing
+   50:   Successfully indexed
+   70:   Error: page not found
+   80:   Error: disambiguation
+   90:   Error: unknown error
