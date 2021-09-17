@@ -175,13 +175,13 @@ async def main():
     num_crawled = 0
     batches_complete = 0
     rows = []
+    query_queue = []
     while num_crawled < num_to_crawl:
         # run one batch
         if len(rows) == 0:
             rows = check_out_rows(cur, num_to_crawl - num_crawled)
         
         coro_queue = []
-        query_queue = []
         num_for_this_batch = min(len(rows), PAGES_PER_BATCH)
 
         # Crawl PAGES_PER_BATCH pages simultaneously, building query queue
@@ -204,9 +204,20 @@ async def main():
             for (q, v) in query_queue:
                 # print ('Executing:', q, v, flush=True)
                 cur.execute(q, v)
+            query_queue = []
             print('done. Committing...', end='', flush=True)
             conn.commit()
             print('done.', flush=True)
+            
+    print(f'{num_crawled} / {num_to_crawl} pages crawled.', 
+            'Executing query queue...', end='', flush=True)
+    for (q, v) in query_queue:
+        # print ('Executing:', q, v, flush=True)
+        cur.execute(q, v)
+    query_queue = []
+    print('done. Committing...', end='', flush=True)
+    conn.commit()
+    print('done.', flush=True)
     
     conn.commit()
     conn.close()
