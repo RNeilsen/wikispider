@@ -84,7 +84,7 @@ async def get_page(cur, title=None, pageid=None, from_id=None):
                 print(e2)
                 print('Will flag record in Crawl_Queue with status code 90.')
                 return[('''UPDATE Crawl_Queue SET status=90
-                        WHERE pageid=?''', (pageid,))]
+                        WHERE title=?''', (title,))]
     print(wp, "found!", flush=True)
     status_code = 40
 
