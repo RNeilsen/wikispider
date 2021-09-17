@@ -4,8 +4,8 @@
 
 * Structure overview
 ** Spider
-   A spider that finds pages in wsindex.sqlite, firstly from the 
-   Open_Links table, and then from Pages, with the earliest added or 
+   A spider that finds pages in wsindex.sqlite from the Crawl_Queue table
+   with 'to crawl' status codes, sorted by the earliest added or 
    crawled date, then downloads them, and does the following:
    1. Enters their pageid, raw_text, and crawled date into the Pages table
    2. Find all unresolved links pointing to the same title in Open_Links,
@@ -34,8 +34,9 @@
    A simple program that initiates a vacuum operation
 
 * Database schema
-   CREATE TABLE Open_Links
+   CREATE TABLE Crawl_Queue
    (  title       TEXT NOT NULL,
+      pageid      INTEGER,
       added       INTEGER,
       from_id     INTEGER,
       status      INTEGER DEFAULT 10,
@@ -45,7 +46,6 @@
       title       TEXT NOT NULL UNIQUE,
       raw_text    TEXT,
       zip_text    BLOB,
-      status      INTEGER,
       crawled     INTEGER );
    CREATE TABLE Links
    (  from_id     INTEGER,
@@ -68,6 +68,7 @@
    30:   Checked out for crawling
    40:   Successfully crawled, awaiting indexing
    50:   Successfully indexed
+   60:   Error: page retrieved but error with data
    70:   Error: page not found
    80:   Error: disambiguation
    90:   Error: unknown error
