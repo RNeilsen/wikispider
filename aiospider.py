@@ -22,25 +22,32 @@ def check_out_rows(cur, max_to_fetch=0):
         max = min(max_to_fetch, PAGES_PER_BATCH * BATCHES_PER_COMMIT)
         if max < 1: max = 1
 
-    cur.execute(''' SELECT title, pageid, from_id FROM Crawl_Queue
+    cur.execute(''' SELECT DISTINCT title, pageid FROM Crawl_Queue
                     WHERE status < 30
                     ORDER BY status ASC, added ASC
                     LIMIT ? ''', (max,))
     rows = cur.fetchall()
-    for (title, pageid, from_id) in rows:
-        cur.execute(''' UPDATE Crawl_Queue 
+    for (title, pageid) in rows:
+        if pageid is not None:
+            cur.execute(''' UPDATE Crawl_Queue 
+                    SET status = 30 
+                    WHERE pageid=? ''', (pageid,))
+        elif title is not None:
+            cur.execute(''' UPDATE Crawl_Queue 
                     SET status = 30 
                     WHERE title=? ''', (title,))
+        else:
+            raise Exception("Both pageid and title are None")
     cur.connection.commit()
     
     if len(rows) == 0:
         print('NOTE: No records found with status < 30 in Crawl_Queue')
 
-    print('check_out_rows() checked out', len(rows), 'rows.')
+    print('check_out_rows() checked out', len(rows), 'distinct titles.')
     return rows
 
 
-async def get_page(cur, title=None, pageid=None, from_id=None):
+async def get_page(cur, title=None, pageid=None):
     '''Download page contents, produce a set of queries to update the db'''
     if title is None and pageid is None:
         raise Exception("get_page called with no title or pageid")
@@ -177,11 +184,11 @@ async def main():
         num_for_this_batch = min(len(rows), PAGES_PER_BATCH)
         # Crawl PAGES_PER_BATCH pages simultaneously, building query queue
         for _ in range(num_for_this_batch):
-            (title, pageid, from_id) = rows.pop()
+            (title, pageid) = rows.pop()
             if pageid is not None:
-                coro_queue.append(get_page(cur, pageid=pageid, from_id=from_id))
+                coro_queue.append(get_page(cur, pageid=pageid))
             else:
-                coro_queue.append(get_page(cur, title=title, from_id=from_id))
+                coro_queue.append(get_page(cur, title=title))
         results = await asyncio.gather(*coro_queue)
         for res in results:
             query_queue += res
