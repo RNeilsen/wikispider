@@ -2,7 +2,7 @@ import asyncio, time, sqlite3, wikipedia
 from aioify import aioify
 from initialise import INDEX_FILE_PATH
 
-PAGES_PER_BATCH = 50
+PAGES_PER_BATCH = 100
 BATCHES_PER_COMMIT = 5
 
 wikipedia.set_rate_limiting(True)
@@ -53,6 +53,7 @@ async def get_page(cur, title=None, pageid=None):
         raise Exception("get_page called with no title or pageid")
     
     # Attempt to open the page
+    start_time = time.perf_counter()
     if pageid is not None:
         try:
             wp = await aiowp(pageid=pageid, auto_suggest=False, preload=True)
@@ -92,7 +93,7 @@ async def get_page(cur, title=None, pageid=None):
                 print('Will flag record in Crawl_Queue with status code 90.')
                 return[('''UPDATE Crawl_Queue SET status=90
                         WHERE title=?''', (title,))]
-    print(wp, "found!", flush=True)
+    print(wp, f"found in {time.perf_counter() - start_time:0.1f}s", flush=True)
     status_code = 40
 
     queries = []    
@@ -182,6 +183,7 @@ async def main():
         coro_queue = []
         query_queue = []
         num_for_this_batch = min(len(rows), PAGES_PER_BATCH)
+
         # Crawl PAGES_PER_BATCH pages simultaneously, building query queue
         for _ in range(num_for_this_batch):
             (title, pageid) = rows.pop()
@@ -189,14 +191,16 @@ async def main():
                 coro_queue.append(get_page(cur, pageid=pageid))
             else:
                 coro_queue.append(get_page(cur, title=title))
+        
         results = await asyncio.gather(*coro_queue)
         for res in results:
             query_queue += res
-            num_crawled += 1
+        num_crawled += len(results)
 
         batches_complete += 1
         if batches_complete % BATCHES_PER_COMMIT == 0:
-            print('Executing query queue...', end='', flush=True)
+            print(f'{num_crawled} / {num_to_crawl} pages crawled.', 
+                    'Executing query queue...', end='', flush=True)
             for (q, v) in query_queue:
                 # print ('Executing:', q, v, flush=True)
                 cur.execute(q, v)
