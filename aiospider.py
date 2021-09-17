@@ -30,7 +30,7 @@ def check_out_rows(cur, max_to_fetch=0):
     for (title, pageid, from_id) in rows:
         cur.execute(''' UPDATE Crawl_Queue 
                     SET status = 30 
-                    WHERE title=? AND from_id=? ''', (title, from_id))
+                    WHERE title=? ''', (title,))
     cur.connection.commit()
     
     if len(rows) == 0:
