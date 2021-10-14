@@ -21,8 +21,6 @@ inits = { INDEX_FILE_PATH : '''
             CREATE TABLE Pages
             (   pageid      INTEGER NOT NULL PRIMARY KEY UNIQUE,
                 title       TEXT NOT NULL UNIQUE,
-                raw_text    TEXT,
-                zip_text    BLOB,
                 status      INTEGER,
                 crawled     INTEGER );
             CREATE TABLE Links
