@@ -2,8 +2,9 @@ import asyncio, time, sqlite3, wikipedia
 from aioify import aioify
 from initialise import INDEX_FILE_PATH
 
-PAGES_PER_BATCH = 100
-BATCHES_PER_COMMIT = 5
+PAGE_TEXT_DIRECTORY = 'dbs/pagetext/'
+PAGES_PER_BATCH = 50
+BATCHES_PER_COMMIT = 4
 
 wikipedia.set_rate_limiting(True)
 
@@ -69,16 +70,16 @@ async def get_page(cur, title=None, pageid=None):
                         'failed with the following exception:', flush=True)
                 print(e2)
                 print('Will flag record in Crawl_Queue with status code 90.')
-                return[('''UPDATE Crawl_Queue SET status=90
-                        WHERE pageid=?''', (pageid,))]
+                return ( [('''UPDATE Crawl_Queue SET status=90
+                        WHERE pageid=?''', (pageid,))], [] )
     else:
         try:
             wp = await aiowp(title=title, auto_suggest=False, preload=True)
         except wikipedia.PageError:
             print(f'ERROR: Searched title {repr(title)}, page not found.',
-                    'Will flag record in Crawl_queue with status code 70.')
-            return[('''UPDATE Crawl_Queue SET status=70
-                    WHERE title=?''', (title,))]
+                    'Will flag record in Crawl_Queue with status code 70.')
+            return ( [('''UPDATE Crawl_Queue SET status=70
+                    WHERE title=?''', (title,))], [] )
         except Exception as e:
             print(f'ERROR: Searching title {repr(title)} with preload produced',
                     'the following exception:', flush=True)
@@ -91,12 +92,13 @@ async def get_page(cur, title=None, pageid=None):
                         'failed with the following exception:', flush=True)
                 print(e2)
                 print('Will flag record in Crawl_Queue with status code 90.')
-                return[('''UPDATE Crawl_Queue SET status=90
-                        WHERE title=?''', (title,))]
+                return ( [('''UPDATE Crawl_Queue SET status=90
+                        WHERE title=?''', (title,))], [] )
     print(wp, f"found in {time.perf_counter() - start_time:0.1f}s", flush=True)
     status_code = 40
 
-    queries = []    
+    queries = []
+    raw_texts = []
     
     # Resolve all links in Crawl_Queue with this page as their target
     cur.execute('''SELECT from_id FROM Crawl_Queue WHERE
@@ -143,7 +145,7 @@ async def get_page(cur, title=None, pageid=None):
                         (title, added, from_id) VALUES (?,?,?)''', 
                         (title, int(time.time()), int(wp.pageid))) )
 
-    # Enter this page into the db
+    # Enter this page into the db and save raw text
     try:
         raw_text = wp.content
     except Exception as e:
@@ -152,15 +154,16 @@ async def get_page(cur, title=None, pageid=None):
         print(e)
         print('Will enter into Pages with status code 60')
         queries.append( ('''INSERT OR REPLACE INTO Pages
-                (pageid, title, raw_text, status, crawled) VALUES (?,?,?,?,?)''',
-                (wp.pageid, wp.title, None, 60, int(time.time()))) )
+                (pageid, title, status, crawled) VALUES (?,?,?,?)''',
+                (wp.pageid, wp.title, 60, int(time.time()))) )
     else:
         queries.append( ('''INSERT OR REPLACE INTO Pages
-                (pageid, title, raw_text, status, crawled) VALUES (?,?,?,?,?)''',
-                (wp.pageid, wp.title, raw_text, (60 if links_error else 40), 
+                (pageid, title, status, crawled) VALUES (?,?,?,?)''',
+                (wp.pageid, wp.title, (60 if links_error else 40), 
                 int(time.time()))) )
+        raw_texts.append((wp.pageid, raw_text))
 
-    return queries
+    return (queries, raw_texts)
     
 
 async def main():
@@ -176,6 +179,7 @@ async def main():
     batches_complete = 0
     rows = []
     query_queue = []
+    raw_text_queue = []
     while num_crawled < num_to_crawl:
         # run one batch
         if len(rows) == 0:
@@ -193,8 +197,9 @@ async def main():
                 coro_queue.append(get_page(cur, title=title))
         
         results = await asyncio.gather(*coro_queue)
-        for res in results:
-            query_queue += res
+        for (queries, raw_texts) in results:
+            query_queue += queries
+            raw_text_queue += raw_texts
         num_crawled += len(results)
 
         batches_complete += 1
@@ -205,6 +210,11 @@ async def main():
                 # print ('Executing:', q, v, flush=True)
                 cur.execute(q, v)
             query_queue = []
+            print('done. Writing .wsr files...', end='', flush=True)
+            for (pageid, raw_text) in raw_text_queue:
+                with open(PAGE_TEXT_DIRECTORY + str(pageid) + '.wsr', 'w') as f:
+                    f.write(raw_text)
+            raw_text_queue = []
             print('done. Committing...', end='', flush=True)
             conn.commit()
             print('done.', flush=True)
@@ -215,6 +225,11 @@ async def main():
         # print ('Executing:', q, v, flush=True)
         cur.execute(q, v)
     query_queue = []
+    print('done. Writing .wsr files...', end='', flush=True)
+    for (pageid, raw_text) in raw_text_queue:
+        with open(PAGE_TEXT_DIRECTORY + str(pageid) + '.wsr', 'w') as f:
+            f.write(raw_text)
+    raw_text_queue = []
     print('done. Committing...', end='', flush=True)
     conn.commit()
     print('done.', flush=True)
