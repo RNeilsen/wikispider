@@ -99,7 +99,6 @@ async def get_page(cur, title=None, pageid=None):
                 return ( [('''UPDATE Crawl_Queue SET status=90
                         WHERE title=?''', (title,))], [] )
     print(wp, f"found in {time.perf_counter() - start_time:0.1f}s", flush=True)
-    status_code = 40
 
     queries = []
     raw_texts = []
@@ -139,7 +138,6 @@ async def get_page(cur, title=None, pageid=None):
                     ' OR '.join(['title=?' for _ in links_to_pull]),
                     tuple(links_to_pull))
             resolved_links.update({title: pageid for title in cur.fetchall()})
-        unresolved_links = []
         for title in links:
             if title in resolved_links:
                 queries.append( ('''INSERT OR IGNORE INTO Links (from_id, to_id)
