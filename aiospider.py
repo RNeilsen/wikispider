@@ -81,10 +81,14 @@ async def get_page(cur, title=None, pageid=None):
             return ( [('''UPDATE Crawl_Queue SET status=70
                     WHERE title=?''', (title,))], [] )
         except Exception as e:
-            print(f'ERROR: Searching title {repr(title)} with preload produced',
-                    'the following exception:', flush=True)
-            print(e)
-            print('Attempting without preload...', flush=True)
+            if repr(e) == 'extlinks':
+                print(f"ERROR: Searching title {repr(title)} with preload produced" +
+                        "'extlinks' exception, retrying without preload")
+            else:
+                print(f'ERROR: Searching title {repr(title)} with preload produced',
+                        'the following exception:', flush=True)
+                print(e)
+                print('Attempting without preload...', flush=True)
             try:
                 wp = await aiowp(title=title, auto_suggest=False, preload=False)
             except Exception as e2:
@@ -126,8 +130,8 @@ async def get_page(cur, title=None, pageid=None):
     
     if len(links) > 0:
         resolved_links = {}
-        if len(links) > 1000:
-            print(f'NOTE: Page {wp.pageid}: {repr(wp.title)} has {len(links)} links.')
+        # if len(links) > 1000:
+        #     print(f'NOTE: Page {wp.pageid}: {repr(wp.title)} has {len(links)} links.')
         while len(links) > 0:
             links_to_pull = links[:min(len(links), 990)]
             del links[:len(links_to_pull)]
